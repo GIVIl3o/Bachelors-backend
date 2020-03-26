@@ -24,8 +24,7 @@ jobs:
       - image: circleci/openjdk:11-jdk-stretch
     steps:
       - checkout
-      - run: ssh -o StrictHostKeyChecking=no ubuntu@3.125.21.233 'bash -s' < aws.sh &
-      - run: sleep 10
+      - run: ssh -o StrictHostKeyChecking=no ubuntu@3.125.21.233 'bash -s' < aws.sh
 
 
 workflows:
