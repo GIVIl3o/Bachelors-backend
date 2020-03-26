@@ -20,6 +20,8 @@ jobs:
 
   deploy:
     working_directory: ~/repo
+    docker:
+      - image: circleci/openjdk:11-jdk-stretch
     steps:
       - checkout
       - run: ssh ubuntu@ec2-18-197-48-238.eu-central-1.compute.amazonaws.com 'bash -s' < aws.sh
