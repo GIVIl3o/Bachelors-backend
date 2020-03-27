@@ -1,4 +1,6 @@
 
+sudo apt update
+
 sudo kill -9 `sudo lsof -t -i:8080`
 
 sudo rm -rf Bachelors-backend
@@ -13,4 +15,4 @@ cd Bachelors-backend
 # forward tcp, i'm lazy to do something more complicated :(((
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
 
-sudo ./mvnw spring-boot:run &
+sudo ./mvnw spring-boot:run
