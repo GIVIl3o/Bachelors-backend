@@ -25,8 +25,7 @@ jobs:
     steps:
       - checkout
       - run: scp -o StrictHostKeyChecking=no aws.sh ubuntu@3.125.21.233:~/aws.sh
-      - run: ssh -o StrictHostKeyChecking=no ubuntu@3.125.21.233
-      - run: sudo ./aws.sh &
+      - run: ssh -o StrictHostKeyChecking=no ubuntu@3.125.21.233 -f "nohup sudo ~/aws.sh"
 
 
 workflows:
