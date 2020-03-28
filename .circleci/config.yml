@@ -24,8 +24,8 @@ jobs:
       - image: circleci/openjdk:11-jdk-stretch
     steps:
       - checkout
-      - run: scp -o StrictHostKeyChecking=no aws.sh ubuntu@3.125.21.233:~/aws.sh
-      - run: ssh -o StrictHostKeyChecking=no ubuntu@3.125.21.233 -f "nohup sudo ~/aws.sh"
+      - run: scp -o StrictHostKeyChecking=no deploy.sh ubuntu@3.125.21.233:~/deploy.sh
+      - run: ssh -o StrictHostKeyChecking=no ubuntu@3.125.21.233 -f "nohup sudo ~/deploy.sh"
 
 
 workflows:
