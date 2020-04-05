@@ -21,7 +21,7 @@ jobs:
   deploy:
     working_directory: ~/repo
     docker:
-      - image: circleci/openjdk:11-jdk-stretch
+      - image: circleci/openjdk:13-jdk-stretch
     steps:
       - checkout
       - run: scp -o StrictHostKeyChecking=no deploy.sh ubuntu@3.125.21.233:~/deploy.sh
