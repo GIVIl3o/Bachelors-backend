@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.Optional;
 
@@ -23,6 +25,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
     private final PasswordEncoder encoder;
+    private final AvatarService avatarService;
 
     @Override
     public UserDetails loadUserByUsername(String username) {
@@ -30,10 +33,27 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException(username + " not founds"));
     }
 
-    @Override
-    public String register(String username, String password) {
+    private String persistAndGetSession(String username, String password) {
         repository.save(new UserEntity(username, encoder.encode(password)));
         return generateToken(username);
+    }
+
+    @Override
+    public String registerWithDefaultAvatar(String username, String password) {
+        var jwt = persistAndGetSession(username, password);
+
+        avatarService.copyDefaultAvatar(username);
+
+        return jwt;
+    }
+
+    @Override
+    public String register(String username, String password, InputStream content) throws IOException {
+        var jwt = persistAndGetSession(username, password);
+
+        avatarService.doUpload(username, content);
+
+        return jwt;
     }
 
     @Override

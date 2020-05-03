@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Optional;
 
 @Log4j2
 @RestController
@@ -30,14 +33,19 @@ public class UserController {
     }
 
     @PostMapping("registration")
-    public String registration(@RequestParam String username, @RequestParam String password) {
+    public String registration(@RequestParam String username, @RequestParam String password,
+                               @RequestParam(required = false) MultipartFile avatar) {
         try {
-            log.info("registration received: {} {}", username, password);
-            var token = service.register(username, password);
+            log.info("registration received: {} {} {}", username, password, avatar == null);
+
+            var token = Optional.ofNullable(avatar).isPresent() ?
+                    service.register(username, password, avatar.getInputStream()) :
+                    service.registerWithDefaultAvatar(username, password);
+
             log.info("registration success");
             return token;
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username duplication");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username duplication:" + e.getMessage());
         }
     }
 
@@ -47,7 +55,7 @@ public class UserController {
     }
 
     @GetMapping("testEndpoint")
-    public String test(){
+    public String test() {
         return "not authenticated endpoint success";
     }
 
