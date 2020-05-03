@@ -48,7 +48,6 @@ class AvatarService {
                 .build();
 
         this.uploadBucket = uploadBucket;
-        System.out.println(uploadBucket);
     }
 
     private byte[] downsizeAvatar(InputStream stream) {

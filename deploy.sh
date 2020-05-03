@@ -1,13 +1,13 @@
 
-sudo apt update
+apt update
 
-sudo kill -9 `sudo lsof -t -i:8080`
+kill -9 `sudo lsof -t -i:8080`
 
-sudo rm -rf Bachelors-backend
+rm -rf Bachelors-backend
 
 # in case no java
-sudo add-apt-repository ppa:openjdk-r/ppa -y || true
-sudo apt-get install openjdk-13-jdk -y || true
+add-apt-repository ppa:openjdk-r/ppa -y || true
+apt-get install openjdk-13-jdk -y || true
 
 git clone https://github.com/GIVIl3o/Bachelors-backend.git
 
@@ -42,6 +42,6 @@ tags_to_env "$instance_tags"
 
 
 # forward tcp, i'm lazy to do something more complicated :(((
-sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
 
-sudo ./mvnw spring-boot:run
+./mvnw spring-boot:run
