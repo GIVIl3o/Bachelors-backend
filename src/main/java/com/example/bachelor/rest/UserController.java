@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @Log4j2
@@ -59,4 +60,8 @@ public class UserController {
         return "not authenticated endpoint success";
     }
 
+    @GetMapping("/users")
+    public Collection<String> getAllUsernames() {
+        return service.getAllUsernames();
+    }
 }

@@ -11,8 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
+
+import static java.util.stream.Collectors.toSet;
 
 @Service
 @AllArgsConstructor
@@ -76,5 +79,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<UserDetails> parseToken(String token) {
         return token == null ? Optional.empty() : Optional.of(token).flatMap(this::parseJWT).map(this::loadUserByUsername);
+    }
+
+    @Override
+    public Collection<String> getAllUsernames() {
+        return repository.findAllBy().map(UserEntity::getUsername).collect(toSet());
     }
 }
