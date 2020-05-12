@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run: scp -o StrictHostKeyChecking=no deploy.sh ubuntu@3.125.21.233:~/deploy.sh
-      - run: ssh -o StrictHostKeyChecking=no ubuntu@3.125.21.233 -f "chmod 777 ~/deploy.sh && nohup sudo ~/deploy.sh"
+      - run: ssh -o StrictHostKeyChecking=no ubuntu@3.125.21.233 -f "chmod 777 ~/deploy.sh && sudo nohup ~/deploy.sh > /dev/null 2>&1 &"
 
 
 workflows:

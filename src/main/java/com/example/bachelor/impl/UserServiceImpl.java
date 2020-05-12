@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Set;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -37,7 +38,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private String persistAndGetSession(String username, String password) {
-        repository.save(new UserEntity(username, encoder.encode(password)));
+        repository.save(new UserEntity(username, encoder.encode(password), Set.of()));
         return generateToken(username);
     }
 
@@ -83,6 +84,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Collection<String> getAllUsernames() {
-        return repository.findAllBy().map(UserEntity::getUsername).collect(toSet());
+        return repository.findAllBy().stream().map(UserEntity::getUsername).collect(toSet());
+    }
+
+    @Override
+    public boolean existsByUsernamesAllIn(Collection<String> usernames) {
+        return repository.findAllByUsernameIn(usernames).stream().map(UserEntity::getUsername)
+                .collect(toSet()).containsAll(usernames);
     }
 }

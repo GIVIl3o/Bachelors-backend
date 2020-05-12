@@ -1,39 +1,33 @@
 package com.example.bachelor.impl;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
-@Entity
+
 @Data
+@Entity(name = "users")
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserEntity implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
-
-    @Column(unique = true)
     private String username;
 
     private String password;
 
-    public UserEntity(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
+    @OneToMany(mappedBy = "username")
+    private Set<ProjectUserEntity> projects;
 
-
-    // let's ignore everything below
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -1,12 +1,18 @@
 package com.example.bachelor.impl;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.Set;
 
-interface UserRepository extends CrudRepository<UserEntity, String> {
+interface UserRepository extends Repository<UserEntity, String> {
+
+    UserEntity save(UserEntity user);
+
     Optional<UserEntity> findByUsername(String username);
 
-    Stream<UserEntity> findAllBy();
+    Set<UserEntity> findAllBy();
+
+    Set<UserEntity> findAllByUsernameIn(Collection<String> usernames);
 }

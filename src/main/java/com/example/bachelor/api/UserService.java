@@ -20,4 +20,5 @@ public interface UserService extends UserDetailsService {
 
     Optional<UserDetails> parseToken(String jwt);
 
+    boolean existsByUsernamesAllIn(Collection<String> usernames);
 }

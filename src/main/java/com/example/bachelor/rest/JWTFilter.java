@@ -25,6 +25,7 @@ public class JWTFilter extends OncePerRequestFilter {
     private void authenticate(UserDetails user, HttpServletRequest request) {
         var authentication = new UsernamePasswordAuthenticationToken(user, null, List.of());
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
