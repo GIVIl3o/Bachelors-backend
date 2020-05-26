@@ -1,6 +1,5 @@
 package com.example.bachelor.impl;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,29 +10,22 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import java.util.Set;
 
 @Data
 @Builder
-@Entity(name = "projects")
+@Entity(name = "epics")
 @NoArgsConstructor
 @AllArgsConstructor
-class ProjectEntity {
+class EpicEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
 
     @NonNull
-    private String title;
+    private Integer projectId;
 
     @NonNull
-    private String description;
+    private String title;
 
-    @OneToMany(mappedBy = "projectId")
-    private Set<ProjectUserEntity> members;
-
-    @OneToMany(mappedBy = "id")
-    private Set<EpicEntity> epics;
 }

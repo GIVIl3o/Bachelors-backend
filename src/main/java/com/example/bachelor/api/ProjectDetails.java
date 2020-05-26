@@ -8,8 +8,9 @@ import java.util.Set;
 
 @Data
 @Builder
-public class ProjectInfo {
+public class ProjectDetails {
 
+    @NonNull
     private final Integer id;
 
     @NonNull
@@ -20,4 +21,7 @@ public class ProjectInfo {
 
     @NonNull
     private final Set<ProjectUserInfo> members;
+
+    @NonNull
+    private final Set<EpicInfo> epics;
 }

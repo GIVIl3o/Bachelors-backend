@@ -9,4 +9,6 @@ public interface ProjectService {
     int addProject(UserDetails user, ProjectInfo project);
 
     Collection<ProjectInfo> getProjects(UserDetails user);
+
+    ProjectDetails getProject(int projectId);
 }

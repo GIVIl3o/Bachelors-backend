@@ -34,7 +34,7 @@ public class Security extends WebSecurityConfigurerAdapter implements WebMvcConf
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .cors().and()
-                .authorizeRequests().antMatchers("/authentication", "/registration","/testEndpoint").permitAll()
+                .authorizeRequests().antMatchers("/authentication", "/registration", "/testEndpoint").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement()
@@ -56,7 +56,7 @@ public class Security extends WebSecurityConfigurerAdapter implements WebMvcConf
                 HttpMethod.POST.name(),
                 HttpMethod.PUT.name(),
                 HttpMethod.DELETE.name()));
-        configuration.setAllowedHeaders(List.of("Authorization"));
+        configuration.setAllowedHeaders(List.of("Authorization", "content-type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
