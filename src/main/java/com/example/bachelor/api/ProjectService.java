@@ -11,4 +11,8 @@ public interface ProjectService {
     Collection<ProjectInfo> getProjects(UserDetails user);
 
     ProjectDetails getProject(int projectId);
+
+    EpicInfo putEpic(int projectId, EpicInfo epic);
+
+    void deleteEpic(int epicId);
 }

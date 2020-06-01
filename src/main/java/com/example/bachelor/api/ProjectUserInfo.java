@@ -8,7 +8,7 @@ import lombok.NonNull;
 @Builder
 public class ProjectUserInfo {
 
-    public enum Permission {
+    public enum ProjectPermission {
         MEMBER,
         ADMIN,
         OWNER
@@ -18,5 +18,5 @@ public class ProjectUserInfo {
     private final String username;
 
     @NonNull
-    private final Permission permission;
+    private final ProjectPermission permission;
 }

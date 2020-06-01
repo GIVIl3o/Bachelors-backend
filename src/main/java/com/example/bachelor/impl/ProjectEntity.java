@@ -34,6 +34,6 @@ class ProjectEntity {
     @OneToMany(mappedBy = "projectId")
     private Set<ProjectUserEntity> members;
 
-    @OneToMany(mappedBy = "id")
+    @OneToMany(mappedBy = "projectId")
     private Set<EpicEntity> epics;
 }

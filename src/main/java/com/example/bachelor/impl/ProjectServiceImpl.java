@@ -1,9 +1,10 @@
 package com.example.bachelor.impl;
 
+import com.example.bachelor.api.EpicInfo;
 import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
 import com.example.bachelor.api.ProjectService;
-import com.example.bachelor.api.ProjectUserInfo;
+import com.example.bachelor.api.ProjectUserInfo.ProjectPermission;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,10 @@ class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ProjectUserRepository projectUserRepository;
+    private final EpicRepository epicRepository;
     private final ProjectMapper mapper;
 
-    private ProjectUserEntity buildMember(String username, ProjectUserInfo.Permission permission, int projectId) {
+    private ProjectUserEntity buildMember(String username, ProjectPermission permission, int projectId) {
         return ProjectUserEntity.builder().username(username).permission(permission).projectId(projectId).build();
     }
 
@@ -34,7 +36,7 @@ class ProjectServiceImpl implements ProjectService {
                 .map(member -> buildMember(member.getUsername(), member.getPermission(), savedProject.getId()))
                 .collect(toSet());
 
-        members.add(buildMember(owner.getUsername(), ProjectUserInfo.Permission.OWNER, savedProject.getId()));
+        members.add(buildMember(owner.getUsername(), ProjectPermission.OWNER, savedProject.getId()));
         projectUserRepository.saveAll(members);
 
         return savedProject.getId();
@@ -53,4 +55,33 @@ class ProjectServiceImpl implements ProjectService {
         return projectRepository.findById(projectId).map(mapper::mapToDetals)
                 .orElseThrow(() -> new IllegalArgumentException("Project with id:" + projectId + " don't exists"));
     }
+
+    public boolean hasPermissionLevel(String username, int projectId, ProjectPermission permission) {
+        return projectRepository.findById(projectId).stream()
+                .flatMap(project -> project.getMembers().stream())
+                .filter(member -> member.getUsername().equals(username))
+                .anyMatch(member -> isHigherPermissionThan(member.getPermission(), permission));
+    }
+
+    private boolean isHigherPermissionThan(ProjectPermission given, ProjectPermission required) {
+        if (required.equals(ProjectPermission.MEMBER))
+            return true;
+        if (required.equals(ProjectPermission.ADMIN) && !given.equals(ProjectPermission.MEMBER))
+            return true;
+
+        return given.equals(ProjectPermission.ADMIN);
+    }
+
+    @Override
+    public EpicInfo putEpic(int projectId, EpicInfo epic) {
+        var entity = mapper.mapEpic(epic, projectId);
+
+        return mapper.mapEpic(epicRepository.save(entity));
+    }
+
+    @Override
+    public void deleteEpic(int epicId) {
+        epicRepository.deleteById(epicId);
+    }
+
 }

@@ -1,6 +1,6 @@
 package com.example.bachelor.impl;
 
-import com.example.bachelor.api.ProjectUserInfo.Permission;
+import com.example.bachelor.api.ProjectUserInfo.ProjectPermission;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +28,7 @@ class ProjectUserEntity {
     @Column(name = "user_username")
     private String username;
 
-    private Permission permission;
+    private ProjectPermission permission;
 
 
 }
