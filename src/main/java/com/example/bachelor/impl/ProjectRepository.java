@@ -10,6 +10,8 @@ interface ProjectRepository extends Repository<ProjectEntity, Integer> {
 
     Optional<ProjectEntity> findById(int projectId);
 
+    void deleteById(int projectId);
+
     ProjectEntity save(ProjectEntity project);
 
     Stream<ProjectEntity> findAllByIdIn(Collection<Integer> projectIds);

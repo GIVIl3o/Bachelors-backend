@@ -7,4 +7,6 @@ import java.util.stream.Stream;
 interface ProjectUserRepository extends CrudRepository<ProjectUserEntity, Long> {
 
     Stream<ProjectUserEntity> findAllByUsername(String username);
+
+    void deleteAllByProjectId(int projectId);
 }

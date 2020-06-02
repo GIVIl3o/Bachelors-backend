@@ -56,6 +56,12 @@ public class ProjectController {
         return projectService.getProject(projectId);
     }
 
+    @DeleteMapping("/projects/{projectId}")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'OWNER' )")
+    public void deleteProject(@PathVariable int projectId) {
+        projectService.deleteProject(projectId);
+    }
+
     @PutMapping("/epics")
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
     public EpicInfo putEpic(@RequestParam int projectId, @RequestBody EpicInfo epic) {

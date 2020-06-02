@@ -56,6 +56,15 @@ class ProjectServiceImpl implements ProjectService {
                 .orElseThrow(() -> new IllegalArgumentException("Project with id:" + projectId + " don't exists"));
     }
 
+    @Override
+    public void deleteProject(int projectId) {
+        projectRepository.findById(projectId).ifPresent(project -> {
+            project.getEpics().stream().map(EpicEntity::getId).forEach(this::deleteEpic);
+            projectUserRepository.deleteAllByProjectId(projectId);
+            projectRepository.deleteById(projectId);
+        });
+    }
+
     public boolean hasPermissionLevel(String username, int projectId, ProjectPermission permission) {
         return projectRepository.findById(projectId).stream()
                 .flatMap(project -> project.getMembers().stream())
@@ -69,7 +78,7 @@ class ProjectServiceImpl implements ProjectService {
         if (required.equals(ProjectPermission.ADMIN) && !given.equals(ProjectPermission.MEMBER))
             return true;
 
-        return given.equals(ProjectPermission.ADMIN);
+        return given.equals(ProjectPermission.OWNER);
     }
 
     @Override
