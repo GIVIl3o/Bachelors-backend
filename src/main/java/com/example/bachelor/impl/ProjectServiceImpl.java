@@ -57,6 +57,19 @@ class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public void changeOwner(int projectId, String fromName, String toName) {
+        projectUserRepository.findByProjectIdAndUsername(projectId, fromName).ifPresent(t -> {
+            t.setPermission(ProjectPermission.ADMIN);
+            projectUserRepository.save(t);
+        });
+
+        projectUserRepository.findByProjectIdAndUsername(projectId, toName).ifPresent(t -> {
+            t.setPermission(ProjectPermission.OWNER);
+            projectUserRepository.save(t);
+        });
+    }
+
+    @Override
     public void deleteProject(int projectId) {
         projectRepository.findById(projectId).ifPresent(project -> {
             project.getEpics().stream().map(EpicEntity::getId).forEach(this::deleteEpic);

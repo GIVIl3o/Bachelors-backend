@@ -12,6 +12,8 @@ public interface ProjectService {
 
     ProjectDetails getProject(int projectId);
 
+    void changeOwner(int projectId, String fromName, String toName);
+
     void deleteProject(int projectId);
 
     EpicInfo putEpic(int projectId, EpicInfo epic);

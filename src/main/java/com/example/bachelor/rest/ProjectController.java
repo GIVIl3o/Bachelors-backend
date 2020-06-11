@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,6 +55,13 @@ public class ProjectController {
     @GetMapping("/projects/{projectId}")
     public ProjectDetails getProject(@PathVariable int projectId) {
         return projectService.getProject(projectId);
+    }
+
+    @PostMapping("/projects/{projectId}/change_owner/{newOwner}")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'OWNER' )")
+    public void changeOwner(@AuthenticationPrincipal UserDetails user,
+                            @PathVariable int projectId, @PathVariable String newOwner) {
+        projectService.changeOwner(projectId, user.getUsername(), newOwner);
     }
 
     @DeleteMapping("/projects/{projectId}")
