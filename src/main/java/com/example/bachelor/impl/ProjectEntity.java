@@ -1,6 +1,5 @@
 package com.example.bachelor.impl;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,4 +35,7 @@ class ProjectEntity {
 
     @OneToMany(mappedBy = "projectId")
     private Set<EpicEntity> epics;
+
+    @OneToMany(mappedBy = "projectId")
+    private Set<TaskEntity> tasks;
 }

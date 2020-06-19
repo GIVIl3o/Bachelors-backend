@@ -20,4 +20,5 @@ public class ProjectInfo {
 
     @NonNull
     private final Set<ProjectUserInfo> members;
+
 }

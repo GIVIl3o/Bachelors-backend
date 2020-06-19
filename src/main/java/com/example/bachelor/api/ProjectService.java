@@ -19,4 +19,10 @@ public interface ProjectService {
     EpicInfo putEpic(int projectId, EpicInfo epic);
 
     void deleteEpic(int epicId);
+
+    TaskDetails addTask(int projectId, TaskInfo task);
+
+    void updateTask(TaskDetails task);
+
+    void deleteTask(int taskId);
 }

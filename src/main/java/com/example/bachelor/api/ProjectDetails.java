@@ -24,4 +24,7 @@ public class ProjectDetails {
 
     @NonNull
     private final Set<EpicInfo> epics;
+
+    @NonNull
+    private final Set<TaskDetails> tasks;
 }

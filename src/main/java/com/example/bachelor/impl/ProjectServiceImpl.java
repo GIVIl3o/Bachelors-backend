@@ -5,6 +5,8 @@ import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
 import com.example.bachelor.api.ProjectService;
 import com.example.bachelor.api.ProjectUserInfo.ProjectPermission;
+import com.example.bachelor.api.TaskDetails;
+import com.example.bachelor.api.TaskInfo;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectUserRepository projectUserRepository;
     private final EpicRepository epicRepository;
+    private final TaskRepository taskRepository;
     private final ProjectMapper mapper;
 
     private ProjectUserEntity buildMember(String username, ProjectPermission permission, int projectId) {
@@ -52,6 +55,7 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectDetails getProject(int projectId) {
+        System.out.println(projectRepository.findById(projectId).get());
         return projectRepository.findById(projectId).map(mapper::mapToDetals)
                 .orElseThrow(() -> new IllegalArgumentException("Project with id:" + projectId + " don't exists"));
     }
@@ -79,6 +83,9 @@ class ProjectServiceImpl implements ProjectService {
     }
 
     public boolean hasPermissionLevel(String username, int projectId, ProjectPermission permission) {
+        if (username == null)
+            return true;
+
         return projectRepository.findById(projectId).stream()
                 .flatMap(project -> project.getMembers().stream())
                 .filter(member -> member.getUsername().equals(username))
@@ -106,4 +113,27 @@ class ProjectServiceImpl implements ProjectService {
         epicRepository.deleteById(epicId);
     }
 
+    @Override
+    public TaskDetails addTask(int projectId, TaskInfo task) {
+        var taskEntity = TaskEntity.builder()
+                .projectId(projectId)
+                .title(task.getTitle())
+                .assignee(task.getAssignee())
+                .description(task.getDescription())
+                .build();
+
+        taskRepository.save(taskEntity);
+
+        return mapper.mapTask(taskEntity);
+    }
+
+    @Override
+    public void updateTask(TaskDetails task) {
+        taskRepository.save(mapper.mapTask(task));
+    }
+
+    @Override
+    public void deleteTask(int taskId) {
+        taskRepository.deleteById(taskId);
+    }
 }

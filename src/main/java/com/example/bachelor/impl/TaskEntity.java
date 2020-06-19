@@ -1,6 +1,5 @@
 package com.example.bachelor.impl;
 
-import com.example.bachelor.api.ProjectUserInfo.ProjectPermission;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,11 +14,10 @@ import javax.persistence.Id;
 
 @Data
 @Builder
-@Entity(name = "project_user")
+@Entity(name = "tasks")
 @NoArgsConstructor
 @AllArgsConstructor
-class ProjectUserEntity {
-
+class TaskEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
@@ -27,12 +25,13 @@ class ProjectUserEntity {
     @NonNull
     private Integer projectId;
 
-    @NonNull
-    @Column(name = "user_username")
-    private String username;
+    private Integer sprintId;
+
+    private String assignee;
 
     @NonNull
-    private ProjectPermission permission;
+    private String title;
 
-
+    @NonNull
+    private String description;
 }

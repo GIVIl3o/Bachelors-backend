@@ -1,7 +1,5 @@
 package com.example.bachelor.rest;
 
-
-import com.example.bachelor.api.EpicInfo;
 import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
 import com.example.bachelor.api.ProjectService;
@@ -20,7 +18,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -68,18 +65,6 @@ public class ProjectController {
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'OWNER' )")
     public void deleteProject(@PathVariable int projectId) {
         projectService.deleteProject(projectId);
-    }
-
-    @PutMapping("/epics")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
-    public EpicInfo putEpic(@RequestParam int projectId, @RequestBody EpicInfo epic) {
-        return projectService.putEpic(projectId, epic);
-    }
-
-    @DeleteMapping("/epics/{epicId}")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'OWNER' )")
-    public void deleteEpic(@RequestParam int projectId, @PathVariable int epicId) {
-        projectService.deleteEpic(epicId);
     }
 
 }
