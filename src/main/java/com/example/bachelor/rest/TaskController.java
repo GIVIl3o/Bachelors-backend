@@ -28,6 +28,14 @@ class TaskController {
         return projectService.addTask(projectId, task);
     }
 
+    @PostMapping("/tasks/{taskId}/reorder")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' )")
+    public void moveTask(@RequestParam int projectId, @PathVariable int taskId, @RequestParam Integer sprintId,
+                         @RequestParam Integer previousLeft, @RequestParam Integer previousRight,
+                         @RequestParam Integer nextLeft, @RequestParam Integer nextRight) {
+        projectService.moveTask(taskId, sprintId, previousLeft, previousRight, nextLeft, nextRight);
+    }
+
     @PostMapping("/tasks/{taskId}")
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' )")
     public void updateTask(@RequestParam int projectId, @RequestBody TaskDetails task) {
@@ -36,7 +44,10 @@ class TaskController {
 
     @DeleteMapping("/tasks/{id}")
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' )")
-    public void deleteTask(@RequestParam int projectId, @PathVariable int id) {
-        projectService.deleteTask(id);
+    public void deleteTask(@RequestParam int projectId, @PathVariable int id,
+                           @RequestParam(required = false) Integer previousLeft,
+                           @RequestParam(required = false) Integer previousRight) {
+
+        projectService.deleteTask(id, previousLeft, previousRight);
     }
 }

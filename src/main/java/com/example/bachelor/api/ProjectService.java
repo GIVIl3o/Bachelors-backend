@@ -24,5 +24,7 @@ public interface ProjectService {
 
     void updateTask(TaskDetails task);
 
-    void deleteTask(int taskId);
+    void moveTask(int taskId, Integer sprintId, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight);
+
+    void deleteTask(int taskId, Integer previousLeft, Integer previousRight);
 }

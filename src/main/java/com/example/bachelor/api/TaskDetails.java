@@ -7,6 +7,21 @@ import lombok.NonNull;
 @Data
 @Builder
 public class TaskDetails {
+    public enum TaskProgress {
+        PLANNED,
+        TODO,
+        DOING,
+        REVIEW,
+        QA,
+        CLOSED
+    }
+
+    public enum TaskLabel {
+        MINOR,
+        MAJOR,
+        BLOCKER,
+        CRITICAL
+    }
 
     @NonNull
     private final Integer id;
@@ -18,10 +33,17 @@ public class TaskDetails {
 
     private final String assignee;
 
-
     @NonNull
     private final String title;
 
     @NonNull
     private final String description;
+
+    @NonNull
+    private final TaskProgress progress;
+
+    private final TaskLabel label;
+
+    private final Integer leftId;
+    private final Integer rightId;
 }

@@ -4,6 +4,7 @@ import com.example.bachelor.api.EpicInfo;
 import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
 import com.example.bachelor.api.TaskDetails;
+import com.example.bachelor.api.TaskInfo;
 import org.mapstruct.Mapper;
 
 @Mapper
@@ -20,5 +21,7 @@ interface ProjectMapper {
     TaskDetails mapTask(TaskEntity entity);
 
     TaskEntity mapTask(TaskDetails entity);
+
+    TaskEntity mapTaskFromInfo(TaskInfo entity, int projectId);
 
 }

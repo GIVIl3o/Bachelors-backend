@@ -55,7 +55,6 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectDetails getProject(int projectId) {
-        System.out.println(projectRepository.findById(projectId).get());
         return projectRepository.findById(projectId).map(mapper::mapToDetals)
                 .orElseThrow(() -> new IllegalArgumentException("Project with id:" + projectId + " don't exists"));
     }
@@ -115,12 +114,7 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public TaskDetails addTask(int projectId, TaskInfo task) {
-        var taskEntity = TaskEntity.builder()
-                .projectId(projectId)
-                .title(task.getTitle())
-                .assignee(task.getAssignee())
-                .description(task.getDescription())
-                .build();
+        var taskEntity = mapper.mapTaskFromInfo(task, projectId);
 
         taskRepository.save(taskEntity);
 
@@ -133,7 +127,44 @@ class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void deleteTask(int taskId) {
+    public void deleteTask(int taskId, Integer previousLeft, Integer previousRight) {
+        removeTaskFromOrder(previousLeft, previousRight);
         taskRepository.deleteById(taskId);
+    }
+
+    private void removeTaskFromOrder(Integer previousLeft, Integer previousRight) {
+        System.out.println("remove task");
+        System.out.println(previousLeft);
+        System.out.println(previousRight);
+        if (previousLeft != null) {
+            var entity = taskRepository.findById(previousLeft);
+            taskRepository.save(entity.toBuilder().rightId(previousRight).build());
+        }
+        if (previousRight != null) {
+            var entity = taskRepository.findById(previousRight);
+            taskRepository.save(entity.toBuilder().leftId(previousLeft).build());
+        }
+    }
+
+    private void addTaskToOrder(int taskId, Integer sprintId, Integer nextLeft, Integer nextRight) {
+        System.out.println("add task");
+        System.out.println(nextLeft);
+        System.out.println(nextRight);
+        if (nextLeft != null) {
+            var entity = taskRepository.findById(nextLeft);
+            taskRepository.save(entity.toBuilder().rightId(taskId).build());
+        }
+        if (nextRight != null) {
+            var entity = taskRepository.findById(nextRight);
+            taskRepository.save(entity.toBuilder().leftId(taskId).build());
+        }
+        var entity = taskRepository.findById(taskId);
+        taskRepository.save(entity.toBuilder().sprintId(sprintId).leftId(nextLeft).rightId(nextRight).build());
+    }
+
+    @Override
+    public void moveTask(int taskId, Integer sprintId, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight) {
+        removeTaskFromOrder(previousLeft, previousRight);
+        addTaskToOrder(taskId, sprintId, nextLeft, nextRight);
     }
 }
