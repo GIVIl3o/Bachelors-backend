@@ -20,6 +20,10 @@ public interface ProjectService {
 
     void deleteEpic(int epicId);
 
+    SprintDetails putSprint(int projectId,SprintInfo sprint);
+
+    void deleteSprint(int sprintId);
+
     TaskDetails addTask(int projectId, TaskInfo task);
 
     void updateTask(TaskDetails task);

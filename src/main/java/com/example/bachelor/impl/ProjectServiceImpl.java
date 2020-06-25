@@ -5,6 +5,8 @@ import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
 import com.example.bachelor.api.ProjectService;
 import com.example.bachelor.api.ProjectUserInfo.ProjectPermission;
+import com.example.bachelor.api.SprintDetails;
+import com.example.bachelor.api.SprintInfo;
 import com.example.bachelor.api.TaskDetails;
 import com.example.bachelor.api.TaskInfo;
 import lombok.AllArgsConstructor;
@@ -23,6 +25,7 @@ class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectUserRepository projectUserRepository;
     private final EpicRepository epicRepository;
+    private final SprintRepository sprintRepository;
     private final TaskRepository taskRepository;
     private final ProjectMapper mapper;
 
@@ -55,7 +58,7 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectDetails getProject(int projectId) {
-        return projectRepository.findById(projectId).map(mapper::mapToDetals)
+        return projectRepository.findById(projectId).map(mapper::mapToDetails)
                 .orElseThrow(() -> new IllegalArgumentException("Project with id:" + projectId + " don't exists"));
     }
 
@@ -75,8 +78,11 @@ class ProjectServiceImpl implements ProjectService {
     @Override
     public void deleteProject(int projectId) {
         projectRepository.findById(projectId).ifPresent(project -> {
-            project.getEpics().stream().map(EpicEntity::getId).forEach(this::deleteEpic);
-            projectUserRepository.deleteAllByProjectId(projectId);
+            taskRepository.deleteByProjectId(projectId);
+            sprintRepository.deleteByProjectId(projectId);
+            epicRepository.deleteByProjectId(projectId);
+
+            projectUserRepository.deleteByProjectId(projectId);
             projectRepository.deleteById(projectId);
         });
     }
@@ -109,7 +115,21 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void deleteEpic(int epicId) {
+        sprintRepository.unconnectFromEpic(epicId);
         epicRepository.deleteById(epicId);
+    }
+
+    @Override
+    public SprintDetails putSprint(int projectId, SprintInfo sprint) {
+        var entity = mapper.mapSprint(sprint, projectId);
+
+        return mapper.mapSprint(sprintRepository.save(entity));
+    }
+
+    @Override
+    public void deleteSprint(int sprintId) {
+        taskRepository.unconnectFromSprint(sprintId);
+        sprintRepository.deleteById(sprintId);
     }
 
     @Override

@@ -37,5 +37,8 @@ class ProjectEntity {
     private Set<EpicEntity> epics;
 
     @OneToMany(mappedBy = "projectId")
+    private Set<SprintEntity> sprints;
+
+    @OneToMany(mappedBy = "projectId")
     private Set<TaskEntity> tasks;
 }
