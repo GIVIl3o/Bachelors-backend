@@ -1,5 +1,6 @@
 package com.example.bachelor.impl;
 
+import com.example.bachelor.api.AttachmentInfo;
 import com.example.bachelor.api.EpicInfo;
 import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
@@ -13,10 +14,16 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 @Service
 @AllArgsConstructor
@@ -27,7 +34,9 @@ class ProjectServiceImpl implements ProjectService {
     private final EpicRepository epicRepository;
     private final SprintRepository sprintRepository;
     private final TaskRepository taskRepository;
+    private final AttachmentRepository attachmentRepository;
     private final ProjectMapper mapper;
+    private final FileService fileService;
 
     private ProjectUserEntity buildMember(String username, ProjectPermission permission, int projectId) {
         return ProjectUserEntity.builder().username(username).permission(permission).projectId(projectId).build();
@@ -134,11 +143,42 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public TaskDetails addTask(int projectId, TaskInfo task) {
+        System.out.println(task);
+        System.out.println("bla");
         var taskEntity = mapper.mapTaskFromInfo(task, projectId);
+        System.out.println(taskEntity);
 
         taskRepository.save(taskEntity);
 
+        if (taskEntity.getRightId() != null) {
+            var rightTask = taskRepository.findById(taskEntity.getRightId());
+            System.out.println("avoe:" + taskEntity.getId());
+            taskRepository.save(rightTask.toBuilder().leftId(taskEntity.getId()).build());
+        }
+
         return mapper.mapTask(taskEntity);
+    }
+
+    @Override
+    public AttachmentInfo addAttachment(int taskId, String filename, String contentType, long size, InputStream file) {
+        var formatter = new SimpleDateFormat("dd/MM/yyyy-HH:mm:ss");
+        var date = new Date();
+        var dateString = formatter.format(date);
+
+        var fullFileName = dateString + "-" + taskId + "-" + filename;
+
+        var url = fileService.uploadAttachment(fullFileName, size, file);
+
+        var entity = AttachmentEntity.builder().contentType(contentType).filename(filename).taskId(taskId).url(url).build();
+
+        attachmentRepository.save(entity);
+
+        return mapper.mapAttachment(entity);
+    }
+
+    @Override
+    public List<AttachmentInfo> getAttachments(int taskId) {
+        return attachmentRepository.findByTaskId(taskId).map(mapper::mapAttachment).collect(toUnmodifiableList());
     }
 
     @Override
@@ -166,25 +206,27 @@ class ProjectServiceImpl implements ProjectService {
         }
     }
 
-    private void addTaskToOrder(int taskId, Integer sprintId, Integer nextLeft, Integer nextRight) {
+    private void addTaskToOrder(int taskId, Integer sprintId, TaskDetails.TaskProgress newProgress, Integer nextLeft, Integer nextRight) {
         System.out.println("add task");
         System.out.println(nextLeft);
         System.out.println(nextRight);
         if (nextLeft != null) {
             var entity = taskRepository.findById(nextLeft);
+            System.out.println("in next Left:" + entity.getId());
             taskRepository.save(entity.toBuilder().rightId(taskId).build());
         }
         if (nextRight != null) {
             var entity = taskRepository.findById(nextRight);
+            System.out.println("in next Right:" + entity.getId());
             taskRepository.save(entity.toBuilder().leftId(taskId).build());
         }
         var entity = taskRepository.findById(taskId);
-        taskRepository.save(entity.toBuilder().sprintId(sprintId).leftId(nextLeft).rightId(nextRight).build());
+        taskRepository.save(entity.toBuilder().sprintId(sprintId).progress(newProgress).leftId(nextLeft).rightId(nextRight).build());
     }
 
     @Override
-    public void moveTask(int taskId, Integer sprintId, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight) {
+    public void moveTask(int taskId, Integer sprintId, TaskDetails.TaskProgress newProgress, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight) {
         removeTaskFromOrder(previousLeft, previousRight);
-        addTaskToOrder(taskId, sprintId, nextLeft, nextRight);
+        addTaskToOrder(taskId, sprintId, newProgress, nextLeft, nextRight);
     }
 }

@@ -22,18 +22,20 @@ import java.io.InputStream;
 
 @Log4j2
 @Service
-class AvatarService {
+class FileService {
     private static final String DEFAULT_AVATAR = "images/default_avatar.png";
     private static final String FOLDER_DELIMITER = "/";
     private static final String FORMAT_DELIMITER = ".";
     private static final String DEFAULT_AVATAR_FORMAT = "png";
     private static final Integer AVATAR_SIZE = 100; // 100x100 image
     private static final String PROFILE_FOLDER = "profile";
+    private static final String ATTACHMENT_FOLDER = "attachments";
 
     private final AmazonS3 s3client;
     private final String uploadBucket;
+    private final String awsRegion;
 
-    public AvatarService(
+    public FileService(
             @Value("${aws.accessKey}") String awsAccessKey,
             @Value("${aws.secretKey}") String awsSecretKey,
             @Value("${aws.region}") String awsRegion,
@@ -47,7 +49,12 @@ class AvatarService {
                 .withRegion(awsRegion)
                 .build();
 
+        this.awsRegion = awsRegion;
         this.uploadBucket = uploadBucket;
+    }
+
+    private String getUrl(String key) {
+        return "https://s3." + awsRegion + ".amazonaws.com/" + uploadBucket + FOLDER_DELIMITER + key;
     }
 
     private byte[] downsizeAvatar(InputStream stream) {
@@ -62,7 +69,6 @@ class AvatarService {
             throw new IllegalArgumentException("Cannot process avatar" + e.getMessage());
         }
     }
-
 
     String doUpload(String username, InputStream content) {
         var avatar = downsizeAvatar(content);
@@ -79,6 +85,21 @@ class AvatarService {
         s3client.putObject(request);
 
         return key;
+    }
+
+    String uploadAttachment(String fileName, long size, InputStream file) {
+        var key = ATTACHMENT_FOLDER + FOLDER_DELIMITER + fileName;
+
+        var metadata = new ObjectMetadata();
+        metadata.setContentLength(size);
+
+        var request = new PutObjectRequest(uploadBucket, key, file, metadata);
+
+        request.withCannedAcl(CannedAccessControlList.PublicRead);
+
+        s3client.putObject(request);
+
+        return getUrl(key);
     }
 
     void copyDefaultAvatar(String username) {

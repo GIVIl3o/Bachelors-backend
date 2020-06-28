@@ -11,11 +11,16 @@ public class TaskInfo {
 
     private final String assignee;
 
+    private final Integer sprintId;
+
     @NonNull
     private final String description;
 
     @NonNull
     private final TaskDetails.TaskProgress progress;
+
+    @NonNull
+    private final TaskDetails.TaskType type;
 
     private final Integer leftId;
     private final Integer rightId;

@@ -1,5 +1,6 @@
 package com.example.bachelor.impl;
 
+import com.example.bachelor.api.AttachmentInfo;
 import com.example.bachelor.api.EpicInfo;
 import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
@@ -30,4 +31,5 @@ interface ProjectMapper {
 
     TaskEntity mapTaskFromInfo(TaskInfo entity, int projectId);
 
+    AttachmentInfo mapAttachment(AttachmentEntity entity);
 }

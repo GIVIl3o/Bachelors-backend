@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
     private final PasswordEncoder encoder;
-    private final AvatarService avatarService;
+    private final FileService avatarService;
 
     @Override
     public UserDetails loadUserByUsername(String username) {

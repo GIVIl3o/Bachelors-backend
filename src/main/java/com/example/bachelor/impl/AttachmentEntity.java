@@ -1,6 +1,5 @@
 package com.example.bachelor.impl;
 
-import com.example.bachelor.api.TaskDetails;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,36 +12,25 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Data
-@Builder(toBuilder = true)
-@Entity(name = "tasks")
+@Builder
+@Entity(name = "attachments")
 @NoArgsConstructor
 @AllArgsConstructor
-class TaskEntity {
+class AttachmentEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Integer id;
 
     @NonNull
-    private Integer projectId;
-
-    private Integer sprintId;
-
-    private String assignee;
+    private Integer taskId;
 
     @NonNull
-    private String title;
+    private String filename;
 
     @NonNull
-    private String description;
+    private String contentType;
 
     @NonNull
-    private TaskDetails.TaskProgress progress;
-
-    private TaskDetails.TaskLabel label;
-
-    @NonNull
-    private TaskDetails.TaskType type;
-
-    private Integer leftId;
-    private Integer rightId;
+    private String url;
 }

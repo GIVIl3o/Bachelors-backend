@@ -2,7 +2,10 @@ package com.example.bachelor.api;
 
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 
 public interface ProjectService {
 
@@ -20,15 +23,19 @@ public interface ProjectService {
 
     void deleteEpic(int epicId);
 
-    SprintDetails putSprint(int projectId,SprintInfo sprint);
+    SprintDetails putSprint(int projectId, SprintInfo sprint);
 
     void deleteSprint(int sprintId);
 
     TaskDetails addTask(int projectId, TaskInfo task);
 
+    AttachmentInfo addAttachment(int taskId, String filename, String contentType, long size, InputStream file);
+
+    List<AttachmentInfo> getAttachments(int taskId);
+
     void updateTask(TaskDetails task);
 
-    void moveTask(int taskId, Integer sprintId, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight);
+    void moveTask(int taskId, Integer sprintId, TaskDetails.TaskProgress newProgress, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight);
 
     void deleteTask(int taskId, Integer previousLeft, Integer previousRight);
 }

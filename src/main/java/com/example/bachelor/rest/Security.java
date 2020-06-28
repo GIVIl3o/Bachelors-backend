@@ -16,6 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.time.Duration;
 import java.util.List;
 
 @AllArgsConstructor
@@ -57,6 +58,7 @@ public class Security extends WebSecurityConfigurerAdapter implements WebMvcConf
                 HttpMethod.PUT.name(),
                 HttpMethod.DELETE.name()));
         configuration.setAllowedHeaders(List.of("Authorization", "content-type"));
+        configuration.setMaxAge(Duration.ofDays(7));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

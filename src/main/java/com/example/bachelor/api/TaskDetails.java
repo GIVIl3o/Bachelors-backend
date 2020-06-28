@@ -23,6 +23,11 @@ public class TaskDetails {
         CRITICAL
     }
 
+    public enum TaskType {
+        STORY,
+        BUG
+    }
+
     @NonNull
     private final Integer id;
 
@@ -43,6 +48,9 @@ public class TaskDetails {
     private final TaskProgress progress;
 
     private final TaskLabel label;
+
+    @NonNull
+    private final TaskType type;
 
     private final Integer leftId;
     private final Integer rightId;
