@@ -28,7 +28,7 @@ public interface ProjectService {
     void deleteSprint(int sprintId);
 
     TaskDetails addTask(int projectId, TaskInfo task);
-
+ 
     AttachmentInfo addAttachment(int taskId, String filename, String contentType, long size, InputStream file);
 
     List<AttachmentInfo> getAttachments(int taskId);
