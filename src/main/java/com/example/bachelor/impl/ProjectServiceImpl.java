@@ -161,7 +161,7 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public AttachmentInfo addAttachment(int taskId, String filename, String contentType, long size, InputStream file) {
-        var formatter = new SimpleDateFormat("dd/MM/yyyy-HH:mm:ss");
+        var formatter = new SimpleDateFormat("dd.MM.yyyy.HH:mm:ss");
         var date = new Date();
         var dateString = formatter.format(date);
 
