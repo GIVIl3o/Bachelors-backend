@@ -12,4 +12,6 @@ interface ProjectUserRepository extends CrudRepository<ProjectUserEntity, Long> 
     Optional<ProjectUserEntity> findByProjectIdAndUsername(int projectId, String username);
 
     void deleteByProjectId(int projectId);
+
+    void deleteByProjectIdAndUsername(int projectId, String username);
 }

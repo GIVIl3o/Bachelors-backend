@@ -4,6 +4,7 @@ import com.example.bachelor.api.ProjectService;
 import com.example.bachelor.api.SprintDetails;
 import com.example.bachelor.api.SprintInfo;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,11 +20,13 @@ class SprintController {
     private final ProjectService service;
 
     @PutMapping("/sprints")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'SCRUM_MASTER' )")
     public SprintDetails putSprint(@RequestParam int projectId, @RequestBody SprintInfo sprint) {
         return service.putSprint(projectId, sprint);
     }
 
     @DeleteMapping("/sprints/{sprintId}")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'SCRUM_MASTER' )")
     public void deleteSprint(@RequestParam int projectId, @PathVariable int sprintId) {
         service.deleteSprint(sprintId);
     }

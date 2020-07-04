@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -34,7 +34,7 @@ public class ProjectController {
     private final ProjectService projectService;
     private final UserService userService;
 
-    @PutMapping("/projects")
+    @PostMapping("/projects")
     public int addProject(@AuthenticationPrincipal UserDetails user, @RequestBody ProjectInfo project) {
         var memberUsernames = project.getMembers().stream().map(ProjectUserInfo::getUsername).collect(toSet());
         if (!userService.existsByUsernamesAllIn(memberUsernames)) {
@@ -42,6 +42,12 @@ public class ProjectController {
         }
 
         return projectService.addProject(user, project);
+    }
+
+    @PostMapping("/projects/{projectId}")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
+    public void updateProject(@PathVariable int projectId, @RequestBody ProjectInfo info) {
+        projectService.updateProject(projectId, info);
     }
 
     @GetMapping("/projects")
@@ -54,17 +60,37 @@ public class ProjectController {
         return projectService.getProject(projectId);
     }
 
-    @PostMapping("/projects/{projectId}/change_owner/{newOwner}")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'OWNER' )")
+    @PostMapping("/projects/{projectId}/change_admin/{newAdmin}")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
     public void changeOwner(@AuthenticationPrincipal UserDetails user,
-                            @PathVariable int projectId, @PathVariable String newOwner) {
-        projectService.changeOwner(projectId, user.getUsername(), newOwner);
+                            @PathVariable int projectId, @PathVariable String newAdmin) {
+        projectService.changeOwner(projectId, user.getUsername(), newAdmin);
     }
 
     @DeleteMapping("/projects/{projectId}")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'OWNER' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
     public void deleteProject(@PathVariable int projectId) {
         projectService.deleteProject(projectId);
+    }
+
+    @PostMapping("/projects/{projectId}/leave")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(#username, #projectId, 'DEVELOPER' ) or" +
+            " @projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
+    public void leaveProject(@PathVariable int projectId, @RequestParam String username) {
+        projectService.leaveProject(projectId, username);
+    }
+
+    @PostMapping("/projects/{projectId}/add")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
+    public void inviteToProject(@PathVariable int projectId, @RequestParam String username) {
+        projectService.inviteToProject(projectId, username);
+    }
+
+    @PostMapping("/projects/{projectId}/update_permission")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
+    public void updateProjectPermission(@PathVariable int projectId, @RequestParam String username,
+                                        @RequestParam ProjectUserInfo.ProjectPermission permission) {
+        projectService.updateProjectPermission(projectId, username, permission);
     }
 
 }

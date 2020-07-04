@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Log4j2
 @RestController
@@ -29,14 +28,14 @@ class TaskController {
     private final ProjectService projectService;
 
     @PostMapping("/tasks")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' ) and " +
-            "@projectServiceImpl.hasPermissionLevel(#task.assignee, #projectId, 'MEMBER' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' ) and " +
+            "@projectServiceImpl.hasPermissionLevel(#task.assignee, #projectId, 'DEVELOPER' )")
     public TaskDetails addTask(@RequestParam int projectId, @RequestBody TaskInfo task) {
         return projectService.addTask(projectId, task);
     }
 
     @PostMapping("/tasks/{taskId}/move")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
     public void moveTask(@RequestParam int projectId, @PathVariable int taskId, @RequestParam(required = false) Integer sprintId,
                          @RequestParam(required = false) Integer previousLeft, @RequestParam(required = false) Integer previousRight,
                          @RequestParam(required = false) Integer nextLeft, @RequestParam(required = false) Integer nextRight,
@@ -45,26 +44,26 @@ class TaskController {
     }
 
     @PostMapping("/tasks/{taskId}")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
     public void updateTask(@RequestParam int projectId, @RequestBody TaskDetails task) {
         projectService.updateTask(task);
     }
 
     @PostMapping("/tasks/{taskId}/attachment")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
     public AttachmentInfo updateTask(@RequestParam int projectId, @PathVariable int taskId, @RequestParam MultipartFile attachment) throws IOException {
         return projectService.addAttachment(taskId, attachment.getOriginalFilename(),
                 attachment.getContentType(), attachment.getSize(), attachment.getInputStream());
     }
 
     @GetMapping("/tasks/{taskId}/attachments")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
     public List<AttachmentInfo> getAttachments(@RequestParam int projectId, @PathVariable int taskId) {
         return projectService.getAttachments(taskId);
     }
 
     @DeleteMapping("/tasks/{id}")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'MEMBER' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
     public void deleteTask(@RequestParam int projectId, @PathVariable int id,
                            @RequestParam(required = false) Integer previousLeft,
                            @RequestParam(required = false) Integer previousRight) {

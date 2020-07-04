@@ -9,9 +9,10 @@ import lombok.NonNull;
 public class ProjectUserInfo {
 
     public enum ProjectPermission {
-        MEMBER,
-        ADMIN,
-        OWNER
+        DEVELOPER,
+        PRODUCT_OWNER,
+        SCRUM_MASTER,
+        ADMIN
     }
 
     @NonNull

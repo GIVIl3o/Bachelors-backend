@@ -22,13 +22,13 @@ class EpicController {
     private final ProjectService projectService;
 
     @PutMapping("/epics")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'SCRUM_MASTER' )")
     public EpicInfo putEpic(@RequestParam int projectId, @RequestBody EpicInfo epic) {
         return projectService.putEpic(projectId, epic);
     }
 
     @DeleteMapping("/epics/{epicId}")
-    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'OWNER' )")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'SCRUM_MASTER' )")
     public void deleteEpic(@RequestParam int projectId, @PathVariable int epicId) {
         projectService.deleteEpic(epicId);
     }

@@ -5,6 +5,7 @@ import com.example.bachelor.api.EpicInfo;
 import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
 import com.example.bachelor.api.ProjectService;
+import com.example.bachelor.api.ProjectUserInfo;
 import com.example.bachelor.api.ProjectUserInfo.ProjectPermission;
 import com.example.bachelor.api.SprintDetails;
 import com.example.bachelor.api.SprintInfo;
@@ -19,11 +20,13 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableMap;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 @Service
 @AllArgsConstructor
@@ -51,10 +54,45 @@ class ProjectServiceImpl implements ProjectService {
                 .map(member -> buildMember(member.getUsername(), member.getPermission(), savedProject.getId()))
                 .collect(toSet());
 
-        members.add(buildMember(owner.getUsername(), ProjectPermission.OWNER, savedProject.getId()));
+        members.add(buildMember(owner.getUsername(), ProjectPermission.ADMIN, savedProject.getId()));
         projectUserRepository.saveAll(members);
 
         return savedProject.getId();
+    }
+
+    @Override
+    public void updateProject(int projectId, ProjectInfo info) {
+        var project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("project " + projectId + " not found"));
+
+        project.setTitle(info.getTitle());
+        project.setDescription(info.getDescription());
+        projectRepository.save(project);
+
+        var members = project.getMembers();
+
+        var memberPermission = info.getMembers().stream().collect(toUnmodifiableMap(ProjectUserInfo::getUsername, ProjectUserInfo::getPermission));
+
+        var changedMembers = members.stream().filter(m -> !m.getPermission().equals(memberPermission.getOrDefault(m.getUsername(), m.getPermission())));
+        var collectedMembers = changedMembers.collect(toUnmodifiableSet());
+        collectedMembers.forEach(m -> m.setPermission(memberPermission.get(m.getUsername())));
+        projectUserRepository.saveAll(collectedMembers);
+    }
+
+    @Override
+    public void updateProjectPermission(int projectId, String username, ProjectUserInfo.ProjectPermission permission) {
+        projectUserRepository.findByProjectIdAndUsername(projectId, username).ifPresent(entity -> {
+           entity.setPermission(permission);
+           projectUserRepository.save(entity);
+        });
+    }
+
+    @Override
+    public void inviteToProject(int projectId, String username) {
+        var entity = ProjectUserEntity.builder().permission(ProjectPermission.DEVELOPER)
+                .projectId(projectId).username(username).build();
+
+        projectUserRepository.save(entity);
     }
 
     @Override
@@ -74,12 +112,12 @@ class ProjectServiceImpl implements ProjectService {
     @Override
     public void changeOwner(int projectId, String fromName, String toName) {
         projectUserRepository.findByProjectIdAndUsername(projectId, fromName).ifPresent(t -> {
-            t.setPermission(ProjectPermission.ADMIN);
+            t.setPermission(ProjectPermission.SCRUM_MASTER);
             projectUserRepository.save(t);
         });
 
         projectUserRepository.findByProjectIdAndUsername(projectId, toName).ifPresent(t -> {
-            t.setPermission(ProjectPermission.OWNER);
+            t.setPermission(ProjectPermission.ADMIN);
             projectUserRepository.save(t);
         });
     }
@@ -96,6 +134,17 @@ class ProjectServiceImpl implements ProjectService {
         });
     }
 
+    @Override
+    public void leaveProject(int projectId, String username) {
+        var tasks = taskRepository.findByProjectIdAndAssignee(projectId, username).collect(Collectors.toUnmodifiableList());
+
+        tasks.forEach(task -> task.setAssignee(null));
+
+        tasks.forEach(taskRepository::save);
+
+        projectUserRepository.deleteByProjectIdAndUsername(projectId, username);
+    }
+
     public boolean hasPermissionLevel(String username, int projectId, ProjectPermission permission) {
         if (username == null)
             return true;
@@ -107,12 +156,15 @@ class ProjectServiceImpl implements ProjectService {
     }
 
     private boolean isHigherPermissionThan(ProjectPermission given, ProjectPermission required) {
-        if (required.equals(ProjectPermission.MEMBER))
+        if (required.equals(ProjectPermission.DEVELOPER))
             return true;
-        if (required.equals(ProjectPermission.ADMIN) && !given.equals(ProjectPermission.MEMBER))
+        if (required.equals(ProjectPermission.PRODUCT_OWNER) && !given.equals(ProjectPermission.DEVELOPER))
             return true;
+        if (required.equals(ProjectPermission.SCRUM_MASTER) && !given.equals(ProjectPermission.DEVELOPER) && !given.equals(ProjectPermission.PRODUCT_OWNER)) {
+            return true;
+        }
 
-        return given.equals(ProjectPermission.OWNER);
+        return given.equals(ProjectPermission.ADMIN);
     }
 
     @Override
