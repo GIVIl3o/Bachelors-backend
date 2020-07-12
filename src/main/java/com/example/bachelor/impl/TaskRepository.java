@@ -5,10 +5,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 interface TaskRepository extends Repository<TaskEntity, Integer> {
-    TaskEntity findById(int taskId);
+    Optional<TaskEntity> findById(int taskId);
+
+    TaskEntity getById(int taskId);
 
     @Modifying
     @Query("update tasks task set task.sprintId = null where task.sprintId = :sprintId")

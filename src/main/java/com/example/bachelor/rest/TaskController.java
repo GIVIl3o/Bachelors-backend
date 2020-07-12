@@ -1,12 +1,16 @@
 package com.example.bachelor.rest;
 
 import com.example.bachelor.api.AttachmentInfo;
+import com.example.bachelor.api.CommentInfo;
 import com.example.bachelor.api.ProjectService;
+import com.example.bachelor.api.SprintDetails;
+import com.example.bachelor.api.SprintInfo;
 import com.example.bachelor.api.TaskDetails;
 import com.example.bachelor.api.TaskInfo;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Log4j2
 @RestController
@@ -45,8 +50,10 @@ class TaskController {
 
     @PostMapping("/tasks/{taskId}")
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
-    public void updateTask(@RequestParam int projectId, @RequestBody TaskDetails task) {
-        projectService.updateTask(task);
+    public void updateTask(@RequestParam int projectId, @RequestBody TaskDetails task, Authentication authentication,
+                           @RequestParam(required = false) boolean assigneeWatching) {
+
+        projectService.updateTask(task, authentication.getName(), assigneeWatching);
     }
 
     @PostMapping("/tasks/{taskId}/attachment")
@@ -69,5 +76,17 @@ class TaskController {
                            @RequestParam(required = false) Integer previousRight) {
 
         projectService.deleteTask(id, previousLeft, previousRight);
+    }
+
+    @GetMapping("/tasks/{id}/comments")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
+    public List<CommentInfo> getComments(@RequestParam int projectId, @PathVariable int id){
+        return projectService.getComments(id);
+    }
+
+    @GetMapping("/tasks/{id}/sprint")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
+    public Optional<SprintDetails> getSprint(@RequestParam int projectId, @PathVariable int id){
+        return projectService.findSprint(id);
     }
 }

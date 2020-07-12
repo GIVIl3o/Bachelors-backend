@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,8 +57,8 @@ public class ProjectController {
     }
 
     @GetMapping("/projects/{projectId}")
-    public ProjectDetails getProject(@PathVariable int projectId) {
-        return projectService.getProject(projectId);
+    public ProjectDetails getProject(@PathVariable int projectId, Authentication authentication) {
+        return projectService.getProject(projectId, authentication.getName());
     }
 
     @PostMapping("/projects/{projectId}/change_admin/{newAdmin}")
@@ -82,8 +83,9 @@ public class ProjectController {
 
     @PostMapping("/projects/{projectId}/add")
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'ADMIN' )")
-    public void inviteToProject(@PathVariable int projectId, @RequestParam String username) {
-        projectService.inviteToProject(projectId, username);
+    public void inviteToProject(@PathVariable int projectId, @RequestParam String username,
+                                @RequestParam ProjectUserInfo.ProjectPermission permission) {
+        projectService.inviteToProject(projectId, username, permission);
     }
 
     @PostMapping("/projects/{projectId}/update_permission")

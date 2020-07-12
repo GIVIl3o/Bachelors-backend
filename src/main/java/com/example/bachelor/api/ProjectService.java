@@ -5,6 +5,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface ProjectService {
 
@@ -16,7 +17,7 @@ public interface ProjectService {
 
     Collection<ProjectInfo> getProjects(UserDetails user);
 
-    ProjectDetails getProject(int projectId);
+    ProjectDetails getProject(int projectId, String username);
 
     void changeOwner(int projectId, String fromName, String toName);
 
@@ -24,7 +25,7 @@ public interface ProjectService {
 
     void leaveProject(int projectId, String username);
 
-    void inviteToProject(int projectId, String username);
+    void inviteToProject(int projectId, String username, ProjectUserInfo.ProjectPermission permission);
 
     EpicInfo putEpic(int projectId, EpicInfo epic);
 
@@ -40,9 +41,21 @@ public interface ProjectService {
 
     List<AttachmentInfo> getAttachments(int taskId);
 
-    void updateTask(TaskDetails task);
+    void updateTask(TaskDetails task, String username, boolean assigneeWatching);
 
     void moveTask(int taskId, Integer sprintId, TaskDetails.TaskProgress newProgress, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight);
 
     void deleteTask(int taskId, Integer previousLeft, Integer previousRight);
+
+    CommentInfo addComment(CommentInfo commentInfo);
+
+    List<CommentInfo> getComments(int taskId);
+
+    List<NotificationInfo> addNotification(int taskId, String payload);
+
+    void deleteNotification(int notificationId);
+
+    List<NotificationInfo> getNotifications(String username);
+
+    Optional<SprintDetails> findSprint(int taskId);
 }

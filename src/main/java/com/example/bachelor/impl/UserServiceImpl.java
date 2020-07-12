@@ -1,20 +1,24 @@
 package com.example.bachelor.impl;
 
+import com.example.bachelor.api.NotificationInfo;
 import com.example.bachelor.api.UserService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -38,6 +42,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private String persistAndGetSession(String username, String password) {
+        if (repository.findByUsername(username).isPresent())
+            throw new IllegalArgumentException("username already taken");
+
         repository.save(new UserEntity(username, encoder.encode(password), Set.of()));
         return generateToken(username);
     }
@@ -52,7 +59,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String register(String username, String password, InputStream content) throws IOException {
+    public String register(String username, String password, InputStream content) {
         var jwt = persistAndGetSession(username, password);
 
         avatarService.doUpload(username, content);
@@ -91,5 +98,23 @@ public class UserServiceImpl implements UserService {
     public boolean existsByUsernamesAllIn(Collection<String> usernames) {
         return repository.findAllByUsernameIn(usernames).stream().map(UserEntity::getUsername)
                 .collect(toSet()).containsAll(usernames);
+    }
+
+    @Override
+    public void changeAvatar(String username, InputStream avatar) {
+        avatarService.doUpload(username, avatar);
+    }
+
+    @Override
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        var user = repository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("user:" + username + " not found"));
+        
+        if (encoder.matches(oldPassword, user.getPassword())) {
+            user.setPassword(encoder.encode(newPassword));
+            repository.save(user);
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect password");
+        }
     }
 }

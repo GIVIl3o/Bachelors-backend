@@ -1,7 +1,9 @@
 package com.example.bachelor.impl;
 
 import com.example.bachelor.api.AttachmentInfo;
+import com.example.bachelor.api.CommentInfo;
 import com.example.bachelor.api.EpicInfo;
+import com.example.bachelor.api.NotificationInfo;
 import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
 import com.example.bachelor.api.SprintDetails;
@@ -32,4 +34,10 @@ interface ProjectMapper {
     TaskEntity mapTaskFromInfo(TaskInfo entity, int projectId);
 
     AttachmentInfo mapAttachment(AttachmentEntity entity);
+
+    CommentEntity mapComment(CommentInfo commentInfo);
+
+    CommentInfo mapComment(CommentEntity commentInfo);
+
+    NotificationInfo mapNotification(NotificationEntity entity);
 }

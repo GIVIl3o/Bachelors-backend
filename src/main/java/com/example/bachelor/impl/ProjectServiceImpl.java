@@ -1,7 +1,9 @@
 package com.example.bachelor.impl;
 
 import com.example.bachelor.api.AttachmentInfo;
+import com.example.bachelor.api.CommentInfo;
 import com.example.bachelor.api.EpicInfo;
+import com.example.bachelor.api.NotificationInfo;
 import com.example.bachelor.api.ProjectDetails;
 import com.example.bachelor.api.ProjectInfo;
 import com.example.bachelor.api.ProjectService;
@@ -20,6 +22,9 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -40,6 +45,9 @@ class ProjectServiceImpl implements ProjectService {
     private final AttachmentRepository attachmentRepository;
     private final ProjectMapper mapper;
     private final FileService fileService;
+    private final WatchingRepository watchingRepository;
+    private final CommentRepository commentRepository;
+    private final NotificationRepository notificationRepository;
 
     private ProjectUserEntity buildMember(String username, ProjectPermission permission, int projectId) {
         return ProjectUserEntity.builder().username(username).permission(permission).projectId(projectId).build();
@@ -82,14 +90,14 @@ class ProjectServiceImpl implements ProjectService {
     @Override
     public void updateProjectPermission(int projectId, String username, ProjectUserInfo.ProjectPermission permission) {
         projectUserRepository.findByProjectIdAndUsername(projectId, username).ifPresent(entity -> {
-           entity.setPermission(permission);
-           projectUserRepository.save(entity);
+            entity.setPermission(permission);
+            projectUserRepository.save(entity);
         });
     }
 
     @Override
-    public void inviteToProject(int projectId, String username) {
-        var entity = ProjectUserEntity.builder().permission(ProjectPermission.DEVELOPER)
+    public void inviteToProject(int projectId, String username, ProjectPermission permission) {
+        var entity = ProjectUserEntity.builder().permission(permission)
                 .projectId(projectId).username(username).build();
 
         projectUserRepository.save(entity);
@@ -104,9 +112,15 @@ class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectDetails getProject(int projectId) {
-        return projectRepository.findById(projectId).map(mapper::mapToDetails)
+    public ProjectDetails getProject(int projectId, String username) {
+        var details = projectRepository.findById(projectId).map(mapper::mapToDetails)
                 .orElseThrow(() -> new IllegalArgumentException("Project with id:" + projectId + " don't exists"));
+
+        var taskWatching = watchingRepository.findByUsername(username).map(WatchingEntity::getTaskId).collect(toUnmodifiableSet());
+
+        details.getTasks().forEach(task -> task.setWatching(taskWatching.contains(task.getId())));
+
+        return details;
     }
 
     @Override
@@ -203,7 +217,7 @@ class ProjectServiceImpl implements ProjectService {
         taskRepository.save(taskEntity);
 
         if (taskEntity.getRightId() != null) {
-            var rightTask = taskRepository.findById(taskEntity.getRightId());
+            var rightTask = taskRepository.getById(taskEntity.getRightId());
             System.out.println("avoe:" + taskEntity.getId());
             taskRepository.save(rightTask.toBuilder().leftId(taskEntity.getId()).build());
         }
@@ -234,8 +248,18 @@ class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void updateTask(TaskDetails task) {
+    public void updateTask(TaskDetails task, String username, boolean assigneeWatching) {
         taskRepository.save(mapper.mapTask(task));
+
+        if (task.getAssignee() != null && assigneeWatching && !username.equals(task.getAssignee())) {
+            watchingRepository.deleteByUsernameAndTaskId(task.getAssignee(), task.getId());
+            watchingRepository.save(WatchingEntity.builder().taskId(task.getId()).username(task.getAssignee()).build());
+        }
+
+        watchingRepository.deleteByUsernameAndTaskId(username, task.getId());
+        if (task.isWatching()) {
+            watchingRepository.save(WatchingEntity.builder().taskId(task.getId()).username(username).build());
+        }
     }
 
     @Override
@@ -249,11 +273,11 @@ class ProjectServiceImpl implements ProjectService {
         System.out.println(previousLeft);
         System.out.println(previousRight);
         if (previousLeft != null) {
-            var entity = taskRepository.findById(previousLeft);
+            var entity = taskRepository.getById(previousLeft);
             taskRepository.save(entity.toBuilder().rightId(previousRight).build());
         }
         if (previousRight != null) {
-            var entity = taskRepository.findById(previousRight);
+            var entity = taskRepository.getById(previousRight);
             taskRepository.save(entity.toBuilder().leftId(previousLeft).build());
         }
     }
@@ -263,16 +287,16 @@ class ProjectServiceImpl implements ProjectService {
         System.out.println(nextLeft);
         System.out.println(nextRight);
         if (nextLeft != null) {
-            var entity = taskRepository.findById(nextLeft);
+            var entity = taskRepository.getById(nextLeft);
             System.out.println("in next Left:" + entity.getId());
             taskRepository.save(entity.toBuilder().rightId(taskId).build());
         }
         if (nextRight != null) {
-            var entity = taskRepository.findById(nextRight);
+            var entity = taskRepository.getById(nextRight);
             System.out.println("in next Right:" + entity.getId());
             taskRepository.save(entity.toBuilder().leftId(taskId).build());
         }
-        var entity = taskRepository.findById(taskId);
+        var entity = taskRepository.getById(taskId);
         taskRepository.save(entity.toBuilder().sprintId(sprintId).progress(newProgress).leftId(nextLeft).rightId(nextRight).build());
     }
 
@@ -280,5 +304,49 @@ class ProjectServiceImpl implements ProjectService {
     public void moveTask(int taskId, Integer sprintId, TaskDetails.TaskProgress newProgress, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight) {
         removeTaskFromOrder(previousLeft, previousRight);
         addTaskToOrder(taskId, sprintId, newProgress, nextLeft, nextRight);
+    }
+
+    @Override
+    public CommentInfo addComment(CommentInfo commentInfo) {
+        var entity = mapper.mapComment(commentInfo);
+
+        commentRepository.save(entity);
+
+        return mapper.mapComment(entity);
+    }
+
+    @Override
+    public List<CommentInfo> getComments(int taskId) {
+        return commentRepository.findByTaskId(taskId).map(mapper::mapComment).collect(toUnmodifiableList());
+    }
+
+    @Override
+    public List<NotificationInfo> addNotification(int taskId, String payload) {
+        var watchers = watchingRepository.findByTaskId(taskId).map(WatchingEntity::getUsername).collect(toUnmodifiableSet());
+
+        var notifications = watchers.stream()
+                .map(username -> NotificationEntity.builder().username(username).payload(payload).build())
+                .collect(toUnmodifiableList());
+
+        notificationRepository.saveAll(notifications);
+        notificationRepository.flush();
+
+        return notifications.stream().map(mapper::mapNotification).collect(toUnmodifiableList());
+    }
+
+    @Override
+    public void deleteNotification(int notificationId) {
+        notificationRepository.deleteById(notificationId);
+    }
+
+    @Override
+    public List<NotificationInfo> getNotifications(String username) {
+        return notificationRepository.findByUsername(username).stream().map(mapper::mapNotification)
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    @Override
+    public Optional<SprintDetails> findSprint(int taskId) {
+        return taskRepository.findById(taskId).map(TaskEntity::getSprintId).flatMap(sprintRepository::findById).map(mapper::mapSprint);
     }
 }

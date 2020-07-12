@@ -54,4 +54,6 @@ public class TaskDetails {
 
     private final Integer leftId;
     private final Integer rightId;
+
+    private boolean watching;
 }
