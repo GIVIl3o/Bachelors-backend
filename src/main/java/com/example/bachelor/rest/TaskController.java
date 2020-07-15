@@ -4,7 +4,6 @@ import com.example.bachelor.api.AttachmentInfo;
 import com.example.bachelor.api.CommentInfo;
 import com.example.bachelor.api.ProjectService;
 import com.example.bachelor.api.SprintDetails;
-import com.example.bachelor.api.SprintInfo;
 import com.example.bachelor.api.TaskDetails;
 import com.example.bachelor.api.TaskInfo;
 import lombok.AllArgsConstructor;
@@ -63,6 +62,12 @@ class TaskController {
                 attachment.getContentType(), attachment.getSize(), attachment.getInputStream());
     }
 
+    @DeleteMapping("/tasks/attachments/{id}")
+    @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
+    public void deleteAttachment(@RequestParam int projectId, @PathVariable int id) {
+        projectService.deleteAttachment(id);
+    }
+
     @GetMapping("/tasks/{taskId}/attachments")
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
     public List<AttachmentInfo> getAttachments(@RequestParam int projectId, @PathVariable int taskId) {
@@ -80,13 +85,13 @@ class TaskController {
 
     @GetMapping("/tasks/{id}/comments")
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
-    public List<CommentInfo> getComments(@RequestParam int projectId, @PathVariable int id){
+    public List<CommentInfo> getComments(@RequestParam int projectId, @PathVariable int id) {
         return projectService.getComments(id);
     }
 
     @GetMapping("/tasks/{id}/sprint")
     @PreAuthorize("@projectServiceImpl.hasPermissionLevel(authentication.name, #projectId, 'DEVELOPER' )")
-    public Optional<SprintDetails> getSprint(@RequestParam int projectId, @PathVariable int id){
+    public Optional<SprintDetails> getSprint(@RequestParam int projectId, @PathVariable int id) {
         return projectService.findSprint(id);
     }
 }

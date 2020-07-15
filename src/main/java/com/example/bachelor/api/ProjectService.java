@@ -39,6 +39,8 @@ public interface ProjectService {
 
     AttachmentInfo addAttachment(int taskId, String filename, String contentType, long size, InputStream file);
 
+    void deleteAttachment(int id);
+
     List<AttachmentInfo> getAttachments(int taskId);
 
     void updateTask(TaskDetails task, String username, boolean assigneeWatching);

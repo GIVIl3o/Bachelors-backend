@@ -9,4 +9,6 @@ interface AttachmentRepository extends Repository<AttachmentEntity, Integer> {
     void save(AttachmentEntity entity);
 
     Stream<AttachmentEntity> findByTaskId(int taskId);
+
+    void deleteById(int id);
 }

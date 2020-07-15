@@ -243,6 +243,11 @@ class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public void deleteAttachment(int id) {
+        attachmentRepository.deleteById(id);
+    }
+
+    @Override
     public List<AttachmentInfo> getAttachments(int taskId) {
         return attachmentRepository.findByTaskId(taskId).map(mapper::mapAttachment).collect(toUnmodifiableList());
     }
