@@ -22,7 +22,7 @@ public class WebsocketChannelInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        System.out.println("start");
+
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             var authorizationHeader = accessor.getNativeHeader("Authorization");
             if (authorizationHeader == null || authorizationHeader.isEmpty())

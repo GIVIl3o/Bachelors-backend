@@ -1,5 +1,6 @@
 package com.example.bachelor.impl;
 
+import com.example.bachelor.api.TaskDetails;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
@@ -10,6 +11,9 @@ import java.util.stream.Stream;
 
 interface TaskRepository extends Repository<TaskEntity, Integer> {
     Optional<TaskEntity> findById(int taskId);
+
+    Optional<TaskEntity> findBySprintIdAndProgressAndLeftIdIsNull(int sprintId, TaskDetails.TaskProgress progress);
+    Optional<TaskEntity> findBySprintIdAndProgressAndRightIdIsNull(int sprintId, TaskDetails.TaskProgress progress);
 
     TaskEntity getById(int taskId);
 

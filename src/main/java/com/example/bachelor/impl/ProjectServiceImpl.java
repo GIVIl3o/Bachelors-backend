@@ -14,17 +14,18 @@ import com.example.bachelor.api.SprintInfo;
 import com.example.bachelor.api.TaskDetails;
 import com.example.bachelor.api.TaskInfo;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
@@ -209,17 +210,29 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public TaskDetails addTask(int projectId, TaskInfo task) {
-        System.out.println(task);
-        System.out.println("bla");
         var taskEntity = mapper.mapTaskFromInfo(task, projectId);
-        System.out.println(taskEntity);
 
-        taskRepository.save(taskEntity);
+        if (taskEntity.getSprintId() != null) {
+            var rightTask = taskRepository.findBySprintIdAndProgressAndLeftIdIsNull(taskEntity.getSprintId(), taskEntity.getProgress());
 
-        if (taskEntity.getRightId() != null) {
-            var rightTask = taskRepository.getById(taskEntity.getRightId());
-            System.out.println("avoe:" + taskEntity.getId());
-            taskRepository.save(rightTask.toBuilder().leftId(taskEntity.getId()).build());
+            if (taskEntity.getRightId() == null && rightTask.isPresent())
+                throw tasksWereUpdated();
+            if (taskEntity.getRightId() != null && rightTask.isEmpty())
+                throw tasksWereUpdated();
+
+            if (taskEntity.getRightId() != null && rightTask.isPresent() && !taskEntity.getRightId().equals(rightTask.get().getId()))
+                throw tasksWereUpdated();
+
+            taskRepository.save(taskEntity);
+
+            rightTask.ifPresent(t -> t.setLeftId(taskEntity.getId()));
+
+            rightTask.ifPresent(taskRepository::save);
+
+            // TODO remove
+            //taskCheckNeighbors(taskEntity, null, rightTask.orElse(null));
+        } else {
+            taskRepository.save(taskEntity);
         }
 
         return mapper.mapTask(taskEntity);
@@ -269,46 +282,94 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void deleteTask(int taskId, Integer previousLeft, Integer previousRight) {
-        removeTaskFromOrder(previousLeft, previousRight);
+        var task = getTaskSafe(taskId);
+        var previousLeftTask = getTaskSafe(previousLeft);
+        var previousRightTask = getTaskSafe(previousRight);
+
+        taskCheckNeighbors(task, previousLeftTask, previousRightTask);
+
+        removeTaskFromOrder(previousLeftTask, previousRightTask);
+
         taskRepository.deleteById(taskId);
     }
 
-    private void removeTaskFromOrder(Integer previousLeft, Integer previousRight) {
-        System.out.println("remove task");
-        System.out.println(previousLeft);
-        System.out.println(previousRight);
+    private void removeTaskFromOrder(@Nullable TaskEntity previousLeft, @Nullable TaskEntity previousRight) {
         if (previousLeft != null) {
-            var entity = taskRepository.getById(previousLeft);
-            taskRepository.save(entity.toBuilder().rightId(previousRight).build());
+            previousLeft.setRightId(previousRight == null ? null : previousRight.getId());
+            taskRepository.save(previousLeft);
         }
         if (previousRight != null) {
-            var entity = taskRepository.getById(previousRight);
-            taskRepository.save(entity.toBuilder().leftId(previousLeft).build());
+            previousRight.setLeftId(previousLeft == null ? null : previousLeft.getId());
+            taskRepository.save(previousRight);
         }
     }
 
-    private void addTaskToOrder(int taskId, Integer sprintId, TaskDetails.TaskProgress newProgress, Integer nextLeft, Integer nextRight) {
-        System.out.println("add task");
-        System.out.println(nextLeft);
-        System.out.println(nextRight);
+    private void addTaskToOrder(TaskEntity task, Integer sprintId, TaskDetails.TaskProgress newProgress, @Nullable TaskEntity nextLeft, @Nullable TaskEntity nextRight) {
         if (nextLeft != null) {
-            var entity = taskRepository.getById(nextLeft);
-            System.out.println("in next Left:" + entity.getId());
-            taskRepository.save(entity.toBuilder().rightId(taskId).build());
+            taskRepository.save(nextLeft.toBuilder().rightId(task.getId()).build());
         }
         if (nextRight != null) {
-            var entity = taskRepository.getById(nextRight);
-            System.out.println("in next Right:" + entity.getId());
-            taskRepository.save(entity.toBuilder().leftId(taskId).build());
+            taskRepository.save(nextRight.toBuilder().leftId(task.getId()).build());
         }
-        var entity = taskRepository.getById(taskId);
-        taskRepository.save(entity.toBuilder().sprintId(sprintId).progress(newProgress).leftId(nextLeft).rightId(nextRight).build());
+
+        var toSaveTask = task.toBuilder()
+                .sprintId(sprintId)
+                .progress(newProgress)
+                .leftId(nextLeft == null ? null : nextLeft.getId())
+                .rightId(nextRight == null ? null : nextRight.getId())
+                .build();
+
+        taskRepository.save(toSaveTask);
+
+        // TODO remove
+        //taskCheckNeighbors(toSaveTask, nextLeft, nextRight);
+    }
+
+    private ResponseStatusException tasksWereUpdated() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Update tasks and try again");
+    }
+
+    TaskEntity getTaskSafe(@Nullable Integer taskId) {
+        return taskId == null ? null : taskRepository.findById(taskId).orElseThrow(this::tasksWereUpdated);
+    }
+
+    private void taskCheckNeighbors(TaskEntity task, @Nullable TaskEntity left, @Nullable TaskEntity right) {
+        if (left != null && !task.getProgress().equals(left.getProgress())) {
+            throw tasksWereUpdated();
+        }
+        if (right != null && !task.getProgress().equals(right.getProgress())) {
+            throw tasksWereUpdated();
+        }
+
+        if (task.getLeftId() == null) {
+            if (left != null)
+                throw tasksWereUpdated();
+        } else {
+            if (left == null || !task.getLeftId().equals(left.getId()) || !task.getProgress().equals(left.getProgress()))
+                throw tasksWereUpdated();
+        }
+
+        if (task.getRightId() == null) {
+            if (right != null)
+                throw tasksWereUpdated();
+        } else {
+            if (right == null || !task.getRightId().equals(right.getId()) || !task.getProgress().equals(right.getProgress()))
+                throw tasksWereUpdated();
+        }
     }
 
     @Override
     public void moveTask(int taskId, Integer sprintId, TaskDetails.TaskProgress newProgress, Integer previousLeft, Integer previousRight, Integer nextLeft, Integer nextRight) {
-        removeTaskFromOrder(previousLeft, previousRight);
-        addTaskToOrder(taskId, sprintId, newProgress, nextLeft, nextRight);
+        var task = getTaskSafe(taskId);
+        var prevLeftTask = getTaskSafe(previousLeft);
+        var prevRightTask = getTaskSafe(previousRight);
+        var nextLeftTask = getTaskSafe(nextLeft);
+        var nextRightTask = getTaskSafe(nextRight);
+
+        taskCheckNeighbors(task, prevLeftTask, prevRightTask);
+
+        removeTaskFromOrder(prevLeftTask, prevRightTask);
+        addTaskToOrder(task, sprintId, newProgress, nextLeftTask, nextRightTask);
     }
 
     @Override
