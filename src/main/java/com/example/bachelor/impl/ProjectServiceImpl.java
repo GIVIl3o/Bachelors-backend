@@ -204,7 +204,16 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void deleteSprint(int sprintId) {
-        taskRepository.unconnectFromSprint(sprintId);
+        taskRepository.deleteBySprintIdAndProgress(sprintId, TaskDetails.TaskProgress.CLOSED);
+
+        var tasks = taskRepository.findBySprintId(sprintId);
+        tasks.forEach(t -> {
+            t.setSprintId(null);
+            t.setLeftId(null);
+            t.setRightId(null);
+        });
+        taskRepository.saveAll(tasks);
+
         sprintRepository.deleteById(sprintId);
     }
 
@@ -240,6 +249,8 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public AttachmentInfo addAttachment(int taskId, String filename, String contentType, long size, InputStream file) {
+        taskRepository.findById(taskId).orElseThrow(this::tasksWereUpdated);
+
         var formatter = new SimpleDateFormat("dd.MM.yyyy.HH:mm:ss");
         var date = new Date();
         var dateString = formatter.format(date);
@@ -262,11 +273,14 @@ class ProjectServiceImpl implements ProjectService {
 
     @Override
     public List<AttachmentInfo> getAttachments(int taskId) {
+        taskRepository.findById(taskId).orElseThrow(this::tasksWereUpdated);
+
         return attachmentRepository.findByTaskId(taskId).map(mapper::mapAttachment).collect(toUnmodifiableList());
     }
 
     @Override
     public void updateTask(TaskDetails task, String username, boolean assigneeWatching) {
+        taskRepository.findById(task.getId()).orElseThrow(this::tasksWereUpdated);
         taskRepository.save(mapper.mapTask(task));
 
         if (task.getAssignee() != null && assigneeWatching && !username.equals(task.getAssignee())) {
